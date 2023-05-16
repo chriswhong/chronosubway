@@ -1,0 +1,16 @@
+{
+  "name": "data-prep",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "",
+  "main": "add-stop-id-to-stations.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@turf/nearest-point": "^6.5.0",
+    "turf-point": "^2.0.1"
+  }
+}

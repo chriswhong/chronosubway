@@ -1,22 +1,20 @@
+import turfPoint from "turf-point";
+import turfNearestPoint from "@turf/nearest-point";
 
-import turfPoint from 'turf-point'
-import turfNearestPoint from '@turf/nearest-point'
+import stops from "./stops.json" assert { type: "json" };
+import stations from "./stations.js";
 
-import stops from './stops.json' assert { type: 'json' }
-import stations from './stations.js'
-
-const noMatches = []
+const noMatches = [];
 
 const stationsWithIds = stations.map((station) => {
-    console.log(station.name)
+  console.log(station.name);
 
-    var nearest = turfNearestPoint(turfPoint(station.coordinates[0]), stops);
-    console.log(nearest)
+  const nearest = turfNearestPoint(turfPoint(station.coordinates[0]), stops);
+  console.log(nearest);
 
-    station.stop_id = nearest.properties.stop_id
+  station.stopId = nearest.properties.stop_id;
 
-    return station
-})
+  return station;
+});
 
-console.log(JSON.stringify(stationsWithIds))
-
+console.log(JSON.stringify(stationsWithIds));

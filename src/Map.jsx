@@ -1,191 +1,172 @@
-import React, { useRef, useEffect, useState } from 'react'
-import mapboxgl from 'mapbox-gl'
-import mapboxGeocoder from '@mapbox/mapbox-gl-geocoder'
+import React, { useRef, useEffect, useState } from "react";
+import mapboxgl from "mapbox-gl";
+import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 
-import 'mapbox-gl/dist/mapbox-gl.css'
-import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css'
-import accessToken from './access-token'
+import "mapbox-gl/dist/mapbox-gl.css";
+import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
+import accessToken from "./access-token";
 
-import stopsData from './assets/data/stops.json'
-import routesData from './assets/data/subway-routes.json'
-import subwayLayerStyles from './subway-layer-styles'
-import StationHeader from './StationHeader'
+import stopsData from "./assets/data/stops.json";
+import routesData from "./assets/data/subway-routes.json";
+import subwayLayerStyles from "./subway-layer-styles";
+import StationHeader from "./StationHeader";
 
-import stations from './assets/data/stations.json'
+import stations from "./assets/data/stations.json";
 
-mapboxgl.accessToken = accessToken
+mapboxgl.accessToken = accessToken;
 
 const dummyFC = {
-    type: 'FeatureCollection',
-    features: []
-}
+  type: "FeatureCollection",
+  features: [],
+};
 
-const Map = (
-    { }
-) => {
-    const mapContainer = useRef(null)
-    const geocoderRef = useRef(null)
-    let [activeStopId, setActiveStopId] = useState()
-    let [mapLoaded, setMapLoaded] = useState(false)
+function Map() {
+  const mapContainer = useRef(null);
+  const geocoderRef = useRef(null);
+  const [activeStopId, setActiveStopId] = useState();
+  const [mapLoaded, setMapLoaded] = useState(false);
 
+  let mapRef = useRef(null);
 
-    let mapRef = useRef(null)
+  if (!mapRef) {
+    mapRef = useRef(null);
+  }
 
-    if (!mapRef) {
-        mapRef = useRef(null)
+  useEffect(() => {
+    mapRef.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: "mapbox://styles/mapbox/dark-v11",
+      bounds: [-74.28423, 40.48451, -73.73228, 40.91912],
+      accessToken,
+      hash: true,
+    });
+
+    const map = mapRef.current;
+
+    const geocoder = new MapboxGeocoder({
+      accessToken: mapboxgl.accessToken,
+      mapboxgl,
+    });
+    map.addControl(geocoder);
+
+    if (geocoderRef) {
+      geocoderRef.current = geocoder;
     }
 
+    map.addControl(new mapboxgl.NavigationControl());
 
-    useEffect(() => {
-        console.log('mapeffect')
-        const map = (mapRef.current = new mapboxgl.Map({
-            container: mapContainer.current,
-            style: 'mapbox://styles/mapbox/dark-v11',
-            bounds: [-74.28423, 40.48451, -73.73228, 40.91912],
-            accessToken,
-            hash: true
-        }))
+    map.on("load", () => {
+      map.addSource("isochrone", {
+        type: "geojson",
+        data: dummyFC,
+      });
 
-        const geocoder = new mapboxGeocoder({
-            accessToken: mapboxgl.accessToken,
-            mapboxgl: mapboxgl
-        })
-        map.addControl(geocoder)
+      map.addLayer({
+        id: "fill-isochrone-40",
+        type: "fill",
+        source: "isochrone",
+        paint: {
+          "fill-color": "#f1eef6",
+        },
+        filter: ["==", ["get", "duration"], "40"],
+      });
 
-        if (geocoderRef) {
-            geocoderRef.current = geocoder
+      map.addLayer({
+        id: "fill-isochrone-30",
+        type: "fill",
+        source: "isochrone",
+        paint: {
+          "fill-color": "#bdc9e1",
+        },
+        filter: ["==", ["get", "duration"], "30"],
+      });
+
+      map.addLayer({
+        id: "fill-isochrone-20",
+        type: "fill",
+        source: "isochrone",
+        paint: {
+          "fill-color": "#74a9cf",
+        },
+        filter: ["==", ["get", "duration"], "20"],
+      });
+
+      map.addLayer({
+        id: "fill-isochrone-10",
+        type: "fill",
+        source: "isochrone",
+        paint: {
+          "fill-color": "#0570b0",
+        },
+        filter: ["==", ["get", "duration"], "10"],
+      });
+
+      map.addLayer({
+        id: "line-isochrone-40",
+        type: "line",
+        source: "isochrone",
+        paint: {
+          "line-color": "#aaa",
+        },
+      });
+
+      map.addSource("nyc-subway-stops", {
+        type: "geojson",
+        data: stopsData,
+      });
+
+      map.on("mouseenter", "subway_stations", (e) => {
+        const { features } = e;
+        const { stopId } = features[0].properties;
+        if (stopId !== activeStopId) {
+          setActiveStopId(stopId);
         }
+      });
 
-        map.addControl(new mapboxgl.NavigationControl())
+      map.on("mouseleave", "subway_stations", () => {
+        setActiveStopId(null);
+      });
 
+      // add geojson sources for subway routes and stops
+      map.addSource("nyc-subway-routes", {
+        type: "geojson",
+        data: routesData,
+      });
 
-        map.on('load', () => {
+      // add layers by iterating over the styles in the array defined in subway-layer-styles.js
+      subwayLayerStyles.forEach((style) => {
+        map.addLayer(style);
+      });
 
+      setMapLoaded(true);
+    });
+  }, []);
 
+  useEffect(() => {
+    if (!mapLoaded) return;
 
-
-            map.addSource('isochrone', {
-                type: 'geojson',
-                data: dummyFC
-            })
-
-
-
-            map.addLayer({
-                id: 'fill-isochrone-40',
-                type: 'fill',
-                source: 'isochrone',
-                paint: {
-                    'fill-color': '#f1eef6'
-                },
-                filter: ['==', ['get', 'duration'], '40']
-            })
-
-
-
-            map.addLayer({
-                id: 'fill-isochrone-30',
-                type: 'fill',
-                source: 'isochrone',
-                paint: {
-                    'fill-color': '#bdc9e1'
-                },
-                filter: ['==', ['get', 'duration'], '30']
-            })
-
-            map.addLayer({
-                id: 'fill-isochrone-20',
-                type: 'fill',
-                source: 'isochrone',
-                paint: {
-                    'fill-color': '#74a9cf'
-                },
-                filter: ['==', ['get', 'duration'], '20']
-            })
-
-            map.addLayer({
-                id: 'fill-isochrone-10',
-                type: 'fill',
-                source: 'isochrone',
-                paint: {
-                    'fill-color': '#0570b0'
-                },
-                filter: ['==', ['get', 'duration'], '10']
-            })
-
-            map.addLayer({
-                id: 'line-isochrone-40',
-                type: 'line',
-                source: 'isochrone',
-                paint: {
-                    'line-color': '#aaa'
-                },
-            })
-
-            map.addSource('nyc-subway-stops', {
-                type: 'geojson',
-                data: stopsData
-            })
-
-            map.on('mouseenter', 'subway_stations', (e) => {
-                const { features } = e
-                const { stop_id } = features[0].properties
-                if (stop_id !== activeStopId) {
-                    setActiveStopId(stop_id)
-                }
-            })
-
-            map.on('mouseleave', 'subway_stations', (e) => {
-                setActiveStopId(null)
-            })
-
-            // add geojson sources for subway routes and stops
-            map.addSource('nyc-subway-routes', {
-                type: 'geojson',
-                data: routesData
-            });
-
-            // add layers by iterating over the styles in the array defined in subway-layer-styles.js
-            subwayLayerStyles.forEach((style) => {
-                map.addLayer(style)
-            })
-
-            setMapLoaded(true)
-        })
-
-
-
-    }, [])
-
-    useEffect(() => {
-        if (!mapLoaded) return
-
-        if (activeStopId) {
-            const isochronePath = `/isochrones/${activeStopId}.geojson`
-            mapRef.current.getSource('isochrone').setData(isochronePath)
-        } else {
-            mapRef.current.getSource('isochrone').setData(dummyFC)
-        }
-
-    }, [activeStopId])
-
-    const getStation = (stop_id) => {
-        return stations.find(d => d.stop_id === stop_id)
+    if (activeStopId) {
+      const isochronePath = `isochrones/${activeStopId}.geojson`;
+      mapRef.current.getSource("isochrone").setData(isochronePath);
+    } else {
+      mapRef.current.getSource("isochrone").setData(dummyFC);
     }
+  }, [activeStopId]);
 
-    const station = getStation(activeStopId)
+  const getStation = (stopId) => stations.find((d) => d.stopId === stopId);
 
+  const station = getStation(activeStopId);
 
-    return (
-        <>
-            <div ref={mapContainer} className='map-container h-full' />
-            {station && (
-                <div className='absolute top-5 left-5 z5 text-white'>
-                    <StationHeader station={station} />
-                </div>
-            )}
-        </>
-    )
+  return (
+    <>
+      <div ref={mapContainer} className="map-container h-full" />
+      {station && (
+        <div className="absolute top-5 left-5 z5 text-white">
+          <StationHeader station={station} />
+        </div>
+      )}
+    </>
+  );
 }
 
-export default Map
+export default Map;
