@@ -241,7 +241,7 @@ function Map() {
 
           <div className=" text-sm mb-3">
             This map lets you explore how much of the city is accessible from
-            each subway station.
+            each subway station in 10, 20, 30, and 40 minutes of travel time.
           </div>
 
           {!station && (
