@@ -11,8 +11,8 @@ function StationHeader(props) {
       <div className="station-lines">
         {station.lines.map((line) => (
           <div
-            key={station.stopId}
-            className={`station-line ${line.lineGroup} ${
+            key={`${line.name}-${line.lineGroup}-${line.express}`}
+            className={`station-line box-content ${line.lineGroup} ${
               line.express ? "express" : "local"
             }`}
           >

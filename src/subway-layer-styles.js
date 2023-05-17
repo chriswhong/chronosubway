@@ -164,26 +164,42 @@ export default [
     },
   },
   {
+    id: "subway_stations_hover",
+    minzoom: 8,
+    source: "nyc-subway-stops",
+    type: "circle",
+    paint: {
+      "circle-opacity": 0,
+      "circle-radius": {
+        stops: [
+          [9, 5],
+          [13, 25],
+        ],
+      },
+    },
+  },
+  {
     id: "subway_stations_labels",
-    minzoom: 13,
+    minzoom: 10,
     source: "nyc-subway-stops",
     type: "symbol",
     layout: {
-      "text-field": "{name}",
+      "text-field": ["get", "stop_name"],
       "symbol-placement": "point",
       "symbol-spacing": 250,
       "symbol-avoid-edges": false,
       "text-size": 14,
-      "text-anchor": "center",
+      "text-anchor": "left",
     },
     paint: {
-      "text-halo-color": "rgba(255, 255, 255, 1)",
+      "text-halo-color": "rgba(100, 100, 100, 1)",
+      "text-color": "#FFF",
       "text-halo-width": 1,
-      "text-translate": [1, 20],
+      "text-translate": [8, 11],
       "text-opacity": {
         stops: [
-          [13, 0],
-          [14, 1],
+          [10, 0],
+          [11, 1],
         ],
       },
     },
