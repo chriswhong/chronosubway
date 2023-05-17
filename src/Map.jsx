@@ -11,6 +11,7 @@ import routesData from "./assets/data/subway-routes.json";
 import subwayLayerStyles from "./subway-layer-styles";
 import StationHeader from "./StationHeader";
 import simplifiedBoroughBoundaries from "./assets/data/simplified-borough-boundaries.json";
+import subwayIsochronesLegend from "./assets/subway-isochrones-legend.svg";
 
 import stations from "./assets/data/stations.json";
 
@@ -251,6 +252,12 @@ function Map() {
           )}
           {station && <StationHeader station={station} />}
         </div>{" "}
+      </div>
+      <div className="absolute bottom-5 right-5 z5 text-white w-2/6 bg-gray-700 p-4 rounded-md w-48">
+        <img
+          src={subwayIsochronesLegend}
+          alt="legend explaining isochrone travel times"
+        />
       </div>
     </>
   );
