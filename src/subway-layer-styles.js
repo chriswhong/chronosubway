@@ -188,14 +188,15 @@ export default [
       "symbol-placement": "point",
       "symbol-spacing": 250,
       "symbol-avoid-edges": false,
-      "text-size": 14,
+      "text-size": 18,
       "text-anchor": "left",
+      "text-letter-spacing": 0.05,
     },
     paint: {
-      "text-halo-color": "rgba(100, 100, 100, 1)",
+      "text-halo-color": "#000",
       "text-color": "#FFF",
-      "text-halo-width": 1,
-      "text-translate": [8, 11],
+      "text-halo-width": 2,
+      "text-translate": [15, 11],
       "text-opacity": {
         stops: [
           [10, 0],
@@ -203,5 +204,6 @@ export default [
         ],
       },
     },
+    filter: false,
   },
 ];

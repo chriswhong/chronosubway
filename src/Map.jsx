@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 
 import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
@@ -12,6 +13,7 @@ import subwayLayerStyles from "./subway-layer-styles";
 import StationHeader from "./StationHeader";
 import simplifiedBoroughBoundaries from "./assets/data/simplified-borough-boundaries.json";
 import subwayIsochronesLegend from "./assets/subway-isochrones-legend.svg";
+import { slugify } from "./util";
 
 import stations from "./assets/data/stations.json";
 
@@ -34,6 +36,8 @@ function Map() {
     mapRef = useRef(null);
   }
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     mapRef.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -41,8 +45,7 @@ function Map() {
       bounds: [-74.28423, 40.48451, -73.73228, 40.91912],
       accessToken,
       hash: true,
-      maxZoom: 12.6,
-      // bearing: 28.8,
+      maxZoom: 13,
     });
 
     const map = mapRef.current;
@@ -74,7 +77,7 @@ function Map() {
             "fill-color": "#4F4F4F",
           },
         },
-        "national-park"
+        "building"
       );
 
       map.addSource("isochrone", {
@@ -92,7 +95,7 @@ function Map() {
           },
           filter: ["==", ["get", "duration"], "40"],
         },
-        "national-park"
+        "building"
       );
 
       map.addLayer(
@@ -105,7 +108,7 @@ function Map() {
           },
           filter: ["==", ["get", "duration"], "30"],
         },
-        "national-park"
+        "building"
       );
 
       map.addLayer(
@@ -118,7 +121,7 @@ function Map() {
           },
           filter: ["==", ["get", "duration"], "20"],
         },
-        "national-park"
+        "building"
       );
 
       map.addLayer(
@@ -131,7 +134,7 @@ function Map() {
           },
           filter: ["==", ["get", "duration"], "10"],
         },
-        "national-park"
+        "building"
       );
 
       map.addLayer(
@@ -143,12 +146,13 @@ function Map() {
             "line-color": "#aaa",
           },
         },
-        "national-park"
+        "building"
       );
 
       map.addSource("nyc-subway-stops", {
         type: "geojson",
         data: stopsData,
+        promoteId: "stopId",
       });
 
       map.on("mousemove", "subway_stations_hover", (e) => {
@@ -208,18 +212,29 @@ function Map() {
         "subway_stations"
       );
 
+      map.on("click", "subway_stations", (e) => {
+        const { stopId, stop_name } = e.features[0].properties;
+
+        navigate(`/stop/${slugify(stopId)}/${slugify(stop_name)}`);
+      });
+
       setMapLoaded(true);
     });
   }, []);
 
   useEffect(() => {
     if (!mapLoaded) return;
-
+    const map = mapRef.current;
     if (activeStopId) {
-      const isochronePath = `isochrones/${activeStopId}.geojson`;
-      mapRef.current.getSource("isochrone").setData(isochronePath);
+      const isochronePath = `/isochrones/${activeStopId}.geojson`;
+      map.getSource("isochrone").setData(isochronePath);
+      map.setFilter("subway_stations_labels", [
+        "==",
+        ["get", "stopId"],
+        activeStopId,
+      ]);
     } else {
-      mapRef.current.getSource("isochrone").setData(dummyFC);
+      map.getSource("isochrone").setData(dummyFC);
     }
   }, [activeStopId]);
 
