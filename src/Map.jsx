@@ -1,21 +1,25 @@
+// packages
 import React, { useRef, useEffect, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
-import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 
-import "mapbox-gl/dist/mapbox-gl.css";
-import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
+// local components and js files
 import accessToken from "./access-token";
-
-import stopsData from "./assets/data/stops.json";
-import routesData from "./assets/data/subway-routes.json";
 import subwayLayerStyles from "./subway-layer-styles";
 import StationHeader from "./StationHeader";
+import { slugify, stopFromSlugifiedId } from "./util";
+
+// css
+import "mapbox-gl/dist/mapbox-gl.css";
+import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
+
+// data
+import stations from "./assets/data/stations.json";
+import stopsData from "./assets/data/stops.json";
+import routesData from "./assets/data/subway-routes.json";
 import simplifiedBoroughBoundaries from "./assets/data/simplified-borough-boundaries.json";
 import subwayIsochronesLegend from "./assets/subway-isochrones-legend.svg";
-import { slugify } from "./util";
-
-import stations from "./assets/data/stations.json";
 
 mapboxgl.accessToken = accessToken;
 
@@ -25,19 +29,70 @@ const dummyFC = {
 };
 
 function Map() {
+  let mapRef = useRef(null);
   const mapContainer = useRef(null);
   const geocoderRef = useRef(null);
-  const [activeStopId, setActiveStopId] = useState();
-  const [mapLoaded, setMapLoaded] = useState(false);
-
-  let mapRef = useRef(null);
+  const locationRef = useRef(null);
 
   if (!mapRef) {
     mapRef = useRef(null);
   }
 
-  const navigate = useNavigate();
+  const [activeStopId, setActiveStopId] = useState();
+  const [mapLoaded, setMapLoaded] = useState(false);
 
+  const navigate = useNavigate();
+  const location = useLocation();
+  const params = useParams();
+
+  // takes a stop as a geojson Feature, sets activeStopId and updates the source for highlighting the active stop
+  const setActiveStop = (stop) => {
+    setActiveStopId(stop.properties.stopId);
+    mapRef.current.getSource("active-stop").setData(stop.geometry);
+  };
+
+  // update active stop when the url changes
+  useEffect(() => {
+    locationRef.current = location;
+    if (!mapRef.current) return;
+
+    if (stopFromSlugifiedId(params.id) !== activeStopId) {
+      const stop = stopFromSlugifiedId(params.id);
+      setActiveStop(stop);
+    }
+  }, [location]);
+
+  const handleMouseMove = (e) => {
+    const map = mapRef.current;
+
+    const features = map.queryRenderedFeatures(e.point, {
+      layers: ["subway_stations_hover"],
+    });
+
+    // if we are on a stop route, don't show other isochrones on hover,
+    // just highlight the other stop to show it is clickable
+
+    // if not on a stop route show isochrone on hover
+    const isStopRoute = locationRef.current.pathname.includes("stop");
+
+    if (features.length) {
+      map.getCanvas().style.cursor = "pointer";
+      const { stopId } = features[0].properties;
+
+      if (!isStopRoute) {
+        if (stopId !== activeStopId) {
+          setActiveStop(features[0]);
+        }
+      }
+    } else {
+      map.getCanvas().style.cursor = "default";
+      if (!isStopRoute) {
+        setActiveStopId(null);
+      }
+    }
+  };
+
+  // on mount, instantiate the map and add sources and layers
   useEffect(() => {
     mapRef.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -155,22 +210,7 @@ function Map() {
         promoteId: "stopId",
       });
 
-      map.on("mousemove", "subway_stations_hover", (e) => {
-        const { features } = e;
-        if (features) {
-          map.getCanvas().style.cursor = "pointer";
-          const { stopId } = features[0].properties;
-          const { geometry } = features[0];
-
-          if (stopId !== activeStopId) {
-            setActiveStopId(stopId);
-            map.getSource("active-stop").setData(geometry);
-          }
-        } else {
-          map.getCanvas().style.cursor = "default";
-          setActiveStopId(null);
-        }
-      });
+      map.on("mousemove", handleMouseMove);
 
       // add geojson sources for subway routes and stops
       map.addSource("nyc-subway-routes", {
@@ -219,9 +259,15 @@ function Map() {
       });
 
       setMapLoaded(true);
+
+      if (params.id) {
+        const stop = stopFromSlugifiedId(params.id);
+        setActiveStop(stop);
+      }
     });
   }, []);
 
+  // when activeStopId changes, fetch isochrone data and update the isochrone source
   useEffect(() => {
     if (!mapLoaded) return;
     const map = mapRef.current;
@@ -238,8 +284,8 @@ function Map() {
     }
   }, [activeStopId]);
 
+  // stations is different from stops, and is used to render the StationHeader component
   const getStation = (stopId) => stations.find((d) => d.stopId === stopId);
-
   const station = getStation(activeStopId);
 
   return (
