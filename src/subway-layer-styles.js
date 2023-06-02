@@ -178,32 +178,4 @@ export default [
       },
     },
   },
-  {
-    id: "subway_stations_labels",
-    minzoom: 10,
-    source: "nyc-subway-stops",
-    type: "symbol",
-    layout: {
-      "text-field": ["get", "stop_name"],
-      "symbol-placement": "point",
-      "symbol-spacing": 250,
-      "symbol-avoid-edges": false,
-      "text-size": 18,
-      "text-anchor": "left",
-      "text-letter-spacing": 0.05,
-    },
-    paint: {
-      "text-halo-color": "#000",
-      "text-color": "#FFF",
-      "text-halo-width": 2,
-      "text-translate": [15, 11],
-      "text-opacity": {
-        stops: [
-          [10, 0],
-          [11, 1],
-        ],
-      },
-    },
-    filter: false,
-  },
 ];

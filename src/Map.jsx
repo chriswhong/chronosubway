@@ -9,6 +9,7 @@ import accessToken from "./access-token";
 import subwayLayerStyles from "./subway-layer-styles";
 import StationHeader from "./StationHeader";
 import { slugify, stopFromSlugifiedId } from "./util";
+import Modal from "./Modal";
 
 // css
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -38,7 +39,11 @@ function Map() {
     mapRef = useRef(null);
   }
 
+  const [showModal, setShowModal] = useState(false);
+
   const [activeStopId, setActiveStopId] = useState();
+  const [highlightedStopId, setHighlightedStopId] = useState();
+
   const [mapLoaded, setMapLoaded] = useState(false);
 
   const navigate = useNavigate();
@@ -48,7 +53,12 @@ function Map() {
   // takes a stop as a geojson Feature, sets activeStopId and updates the source for highlighting the active stop
   const setActiveStop = (stop) => {
     setActiveStopId(stop.properties.stopId);
-    mapRef.current.getSource("active-stop").setData(stop.geometry);
+    mapRef.current.getSource("active-stop").setData(stop);
+  };
+
+  const highlightStop = (stop) => {
+    setHighlightedStopId(stop.properties.stopId);
+    mapRef.current.getSource("highlighted-stop").setData(stop);
   };
 
   // update active stop when the url changes
@@ -80,9 +90,13 @@ function Map() {
       const { stopId } = features[0].properties;
 
       if (!isStopRoute) {
+        // show highlight star and isochrone
         if (stopId !== activeStopId) {
           setActiveStop(features[0]);
         }
+      } else {
+        // just highlight the stop
+        highlightStop(features[0]);
       }
     } else {
       map.getCanvas().style.cursor = "default";
@@ -228,6 +242,11 @@ function Map() {
         data: dummyFC,
       });
 
+      map.addSource("highlighted-stop", {
+        type: "geojson",
+        data: dummyFC,
+      });
+
       const width = 25;
       const height = 25;
 
@@ -247,6 +266,66 @@ function Map() {
           },
           paint: {
             "icon-color": "yellow",
+          },
+        },
+        "subway_stations"
+      );
+
+      const labelStyle = {
+        minzoom: 10,
+        type: "symbol",
+        layout: {
+          "text-field": ["get", "stop_name"],
+          "symbol-placement": "point",
+          "symbol-spacing": 250,
+          "symbol-avoid-edges": false,
+          "text-size": 18,
+          "text-anchor": "left",
+          "text-letter-spacing": 0.05,
+        },
+        paint: {
+          "text-halo-color": "#000",
+          "text-color": "#FFF",
+          "text-halo-width": 2,
+          "text-translate": [15, 11],
+          "text-opacity": {
+            stops: [
+              [10, 0],
+              [11, 1],
+            ],
+          },
+        },
+      };
+
+      map.addLayer({
+        id: "active-stop-label",
+        source: "active-stop",
+        ...labelStyle,
+      });
+
+      map.addLayer({
+        id: "highlighted-stop-label",
+        source: "highlighted-stop",
+        ...labelStyle,
+        layout: {
+          ...labelStyle.layout,
+          "text-size": 14,
+        },
+      });
+
+      map.addLayer(
+        {
+          id: "highlighted-stop-fill",
+          type: "symbol",
+          source: "highlighted-stop",
+          layout: {
+            "icon-image": "star",
+            "icon-allow-overlap": true,
+            "icon-size": 0.8,
+          },
+          paint: {
+            "icon-color": "yellow",
+            "icon-opacity": 0.6,
           },
         },
         "subway_stations"
@@ -274,11 +353,6 @@ function Map() {
     if (activeStopId) {
       const isochronePath = `/isochrones/${activeStopId}.geojson`;
       map.getSource("isochrone").setData(isochronePath);
-      map.setFilter("subway_stations_labels", [
-        "==",
-        ["get", "stopId"],
-        activeStopId,
-      ]);
     } else {
       map.getSource("isochrone").setData(dummyFC);
     }
@@ -292,17 +366,14 @@ function Map() {
     <>
       <div ref={mapContainer} className="map-container h-full" />
 
-      <div className="absolute top-5 left-5 z5 text-white w-2/6 bg-gray-700 p-4 rounded-md">
+      <div className="absolute top-2 sm:top-2 left-2 right-2 sm:left-2 sm:right-auto z5 text-white sm:w-96 bg-gray-700 p-3 rounded-md">
         <div className="">
-          <div className="font-bold text-3xl mb-3">Subway Isochrones</div>
-          <div className=" text-sm mb-2">
-            Transit access is more than proximity to a station, the frequency
-            and connections also play a role.
+          <div className="font-bold text-xl md:text-3xl mb-3">
+            Subway Isochrones
           </div>
-
-          <div className=" text-sm mb-3">
-            This map lets you explore how much of the city is accessible from
-            each subway station in 10, 20, 30, and 40 minutes of travel time.
+          <div className="text-sm mb-2">
+            Transit access is more than proximity to a station, the frequency
+            and connections play a major role.
           </div>
 
           {!station && (
@@ -313,13 +384,22 @@ function Map() {
           )}
           {station && <StationHeader station={station} />}
         </div>{" "}
+        <div
+          onClick={() => {
+            setShowModal(true);
+          }}
+        >
+          About
+        </div>
       </div>
-      <div className="absolute bottom-5 right-5 z5 text-white w-2/6 bg-gray-700 p-4 rounded-md w-48">
+      <div className="absolute bottom-9 left-2 z5 text-white w-2/6 bg-gray-700 p-3 rounded-md w-48">
+        <div className="text-sm md:text-md font-bold mb-2">Accessible Area</div>
         <img
           src={subwayIsochronesLegend}
           alt="legend explaining isochrone travel times"
         />
       </div>
+      <Modal show={showModal} setShow={setShowModal} />
     </>
   );
 }
