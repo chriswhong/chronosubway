@@ -1,8 +1,15 @@
 // packages
 import React, { useRef, useEffect, useState } from "react";
 import mapboxgl from "mapbox-gl";
+import classNames from "class-names";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCircleInfo,
+  faLockOpen,
+  faLock,
+} from "@fortawesome/free-solid-svg-icons";
 
 // local components and js files
 import accessToken from "./access-token";
@@ -31,6 +38,8 @@ const dummyFC = {
 
 function Map() {
   let mapRef = useRef(null);
+  const location = useLocation();
+
   const mapContainer = useRef(null);
   const geocoderRef = useRef(null);
   const locationRef = useRef(null);
@@ -47,13 +56,17 @@ function Map() {
   const [mapLoaded, setMapLoaded] = useState(false);
 
   const navigate = useNavigate();
-  const location = useLocation();
   const params = useParams();
+
+  // if not on a stop route show isochrone on hover
+  const isStopRoute = location.pathname.includes("stop");
 
   // takes a stop as a geojson Feature, sets activeStopId and updates the source for highlighting the active stop
   const setActiveStop = (stop) => {
-    setActiveStopId(stop.properties.stopId);
-    mapRef.current.getSource("active-stop").setData(stop);
+    if (stop) {
+      setActiveStopId(stop.properties.stopId);
+      mapRef.current.getSource("active-stop").setData(stop);
+    }
   };
 
   const highlightStop = (stop) => {
@@ -65,10 +78,11 @@ function Map() {
   useEffect(() => {
     locationRef.current = location;
     if (!mapRef.current) return;
-
-    if (stopFromSlugifiedId(params.id) !== activeStopId) {
-      const stop = stopFromSlugifiedId(params.id);
-      setActiveStop(stop);
+    if (location.pathname !== "/") {
+      if (stopFromSlugifiedId(params.id) !== activeStopId) {
+        const stop = stopFromSlugifiedId(params.id);
+        setActiveStop(stop);
+      }
     }
   }, [location]);
 
@@ -82,14 +96,11 @@ function Map() {
     // if we are on a stop route, don't show other isochrones on hover,
     // just highlight the other stop to show it is clickable
 
-    // if not on a stop route show isochrone on hover
-    const isStopRoute = locationRef.current.pathname.includes("stop");
-
+    const stopRoute = locationRef.current.pathname.includes("stop");
     if (features.length) {
       map.getCanvas().style.cursor = "pointer";
       const { stopId } = features[0].properties;
-
-      if (!isStopRoute) {
+      if (!stopRoute) {
         // show highlight star and isochrone
         if (stopId !== activeStopId) {
           setActiveStop(features[0]);
@@ -101,7 +112,7 @@ function Map() {
     } else {
       map.getCanvas().style.cursor = "default";
       if (!isStopRoute) {
-        setActiveStopId(null);
+        setActiveStop(null);
       }
     }
   };
@@ -290,8 +301,8 @@ function Map() {
           "text-translate": [15, 11],
           "text-opacity": {
             stops: [
-              [10, 0],
-              [11, 1],
+              [7, 0],
+              [8, 1],
             ],
           },
         },
@@ -331,7 +342,7 @@ function Map() {
         "subway_stations"
       );
 
-      map.on("click", "subway_stations", (e) => {
+      map.on("click", "subway_stations_hover", (e) => {
         const { stopId, stop_name } = e.features[0].properties;
 
         navigate(`/stop/${slugify(stopId)}/${slugify(stop_name)}`);
@@ -384,12 +395,39 @@ function Map() {
           )}
           {station && <StationHeader station={station} />}
         </div>{" "}
-        <div
-          onClick={() => {
-            setShowModal(true);
-          }}
-        >
-          About
+        <div className="mt-3 flex items-center">
+          <button
+            type="button"
+            className="font-semibold hover:underline text-sm"
+            onClick={() => {
+              setShowModal(true);
+            }}
+          >
+            <FontAwesomeIcon className="mr-1" icon={faCircleInfo} />
+            About
+          </button>
+          <div className="flex-grow flex justify-end">
+            <button
+              onClick={() => {
+                navigate("/");
+              }}
+              type="button"
+              className={classNames(
+                "text-white  font-medium rounded-full text-sm px-3 py-1 text-center",
+                {
+                  "bg-red-700 hover:bg-red-800": isStopRoute,
+                  "bg-transparent hover:bg-transparent": !isStopRoute,
+                }
+              )}
+            >
+              {isStopRoute && <>Unlock</>}
+              {!isStopRoute && <>Click a station to lock</>}
+              <FontAwesomeIcon
+                className="ml-2"
+                icon={isStopRoute ? faLock : faLockOpen}
+              />
+            </button>
+          </div>
         </div>
       </div>
       <div className="absolute bottom-9 left-2 z5 text-white w-2/6 bg-gray-700 p-3 rounded-md w-48">

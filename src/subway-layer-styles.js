@@ -136,26 +136,26 @@ export default [
   },
   {
     id: "subway_stations",
-    minzoom: 8,
+    minzoom: 7,
     source: "nyc-subway-stops",
     type: "circle",
     paint: {
       "circle-color": "rgba(255, 255, 255, 1)",
       "circle-opacity": {
         stops: [
-          [9, 0],
+          [7, 0],
           [10, 1],
         ],
       },
       "circle-stroke-opacity": {
         stops: [
-          [9, 0],
+          [7, 0],
           [10, 1],
         ],
       },
       "circle-radius": {
         stops: [
-          [9, 2],
+          [7, 1],
           [16, 5],
         ],
       },
