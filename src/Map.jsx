@@ -125,7 +125,12 @@ function Map() {
       bounds: [-74.28423, 40.48451, -73.73228, 40.91912],
       accessToken,
       hash: true,
+      minZoom: 9.5,
       maxZoom: 13,
+      maxBounds: [
+        [-74.28149, 40.42747],
+        [-73.5877, 40.98703],
+      ],
     });
 
     const map = mapRef.current;
@@ -380,15 +385,18 @@ function Map() {
       <div className="absolute top-2 sm:top-2 left-2 right-2 sm:left-2 sm:right-auto z5 text-white sm:w-96 bg-gray-700 p-3 rounded-md">
         <div className="">
           <div className="font-bold text-xl md:text-3xl mb-3">
-            Subway Isochrones
+            NYC Subwaysheds
           </div>
           <div className="text-sm mb-2">
-            Transit access is more than proximity to a station, the frequency
-            and connections play a major role.
+            How far can you get in 40 minutes from each subway station in New
+            York City?
           </div>
 
           {!station && (
-            <div className=" text-sm mb-2 outline-dotted rounded-md border my-3 p-3">
+            <div
+              className=" text-sm mb-2 outline-dotted rounded-md border my-3 p-3"
+              style={{ height: 95 }}
+            >
               Hover over a station to see how much of the city is accessible
               within 40 minutes by subway and walking.
             </div>

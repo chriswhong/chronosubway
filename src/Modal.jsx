@@ -1,5 +1,19 @@
 import React, { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
+import { ReactComponent } from "./about.md";
+
+function ExternalLink({ to, children }) {
+  return (
+    <a
+      className="hover:underline text-cyan-500"
+      href={to}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {children}
+    </a>
+  );
+}
 
 function Modal({ show, setShow }) {
   return (
@@ -42,14 +56,10 @@ function Modal({ show, setShow }) {
                         as="h3"
                         className="text-base font-semibold leading-6 text-white"
                       >
-                        About this Map
+                        About
                       </Dialog.Title>
                       <div className="mt-2">
-                        <p className="text-sm text-white">
-                          Are you sure you want to deactivate your account? All
-                          of your data will be permanently removed. This action
-                          cannot be undone.
-                        </p>
+                        <ReactComponent />
                       </div>
                     </div>
                   </div>
