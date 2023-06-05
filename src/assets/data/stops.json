@@ -197,11 +197,6 @@
     },
     {
       "type": "Feature",
-      "geometry": { "type": "Point", "coordinates": [-74.013205, 40.701411] },
-      "properties": { "stopId": "140", "stop_name": "South Ferry Loop" }
-    },
-    {
-      "type": "Feature",
       "geometry": { "type": "Point", "coordinates": [-74.013664, 40.702068] },
       "properties": { "stopId": "142", "stop_name": "South Ferry" }
     },
