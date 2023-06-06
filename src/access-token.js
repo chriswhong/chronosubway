@@ -1,4 +1,4 @@
 const accessToken =
-  "pk.eyJ1IjoibGFicy1zYW5kYm94IiwiYSI6ImNrMTZuanRmZDA2eGQzYmxqZTlnd21qY3EifQ.Q7DM5HqE5QJzDEnCx8BGFw";
+  "pk.eyJ1IjoiY2hyaXN3aG9uZ21hcGJveCIsImEiOiJjbGlqbTRzcncwOGNlM3JsZ3pwNjdvMmNoIn0.QRuFEomO9e_Rg2gPEqI6XA";
 
 export default accessToken;
