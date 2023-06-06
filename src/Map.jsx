@@ -9,6 +9,7 @@ import {
   faCircleInfo,
   faLockOpen,
   faLock,
+  faTrainSubway,
 } from "@fortawesome/free-solid-svg-icons";
 
 // local components and js files
@@ -126,7 +127,7 @@ function Map() {
       accessToken,
       hash: true,
       minZoom: 9.5,
-      maxZoom: 13,
+      maxZoom: 14,
       maxBounds: [
         [-74.28149, 40.42747],
         [-73.5877, 40.98703],
@@ -295,7 +296,7 @@ function Map() {
           "symbol-placement": "point",
           "symbol-spacing": 250,
           "symbol-avoid-edges": false,
-          "text-size": 18,
+          "text-size": 14,
           "text-anchor": "left",
           "text-letter-spacing": 0.05,
         },
@@ -320,12 +321,25 @@ function Map() {
       });
 
       map.addLayer({
+        id: "stop-labels-small",
+        source: "nyc-subway-stops",
+        ...labelStyle,
+        layout: {
+          ...labelStyle.layout,
+          "text-size": 12,
+        },
+        paint: {
+          ...labelStyle.paint,
+          "text-translate": [10, 8],
+        },
+      });
+
+      map.addLayer({
         id: "highlighted-stop-label",
         source: "highlighted-stop",
         ...labelStyle,
         layout: {
           ...labelStyle.layout,
-          "text-size": 14,
         },
       });
 
@@ -375,7 +389,13 @@ function Map() {
   }, [activeStopId]);
 
   // stations is different from stops, and is used to render the StationHeader component
-  const getStation = (stopId) => stations.find((d) => d.stopId === stopId);
+  const getStation = (stopId) =>
+    stations.find((d) => {
+      if (Array.isArray(d.stopId)) {
+        return d.stopId.includes(stopId);
+      }
+      return d.stopId === stopId;
+    });
   const station = getStation(activeStopId);
 
   return (
@@ -384,8 +404,9 @@ function Map() {
 
       <div className="absolute top-2 sm:top-2 left-2 right-2 sm:left-2 sm:right-auto z5 text-white sm:w-96 bg-gray-700 p-3 rounded-md">
         <div className="">
-          <div className="font-bold text-xl md:text-3xl mb-3">
-            NYC Subwaysheds
+          <div className="font-extrabold leading-none tracking-tight text-xl md:text-3xl mb-3 text-emerald-500">
+            <FontAwesomeIcon icon={faTrainSubway} className="mr-2" /> NYC
+            Subwaysheds
           </div>
           <div className="text-sm mb-2">
             How far can you get in 40 minutes from each subway station in New
@@ -406,7 +427,7 @@ function Map() {
         <div className="mt-3 flex items-center">
           <button
             type="button"
-            className="font-semibold hover:underline text-sm"
+            className="font-semibold text-emerald-500 hover:text-emerald-600 cursor-pointer hover:underline text-sm"
             onClick={() => {
               setShowModal(true);
             }}
@@ -428,7 +449,7 @@ function Map() {
                 }
               )}
             >
-              {isStopRoute && <>Unlock</>}
+              {isStopRoute && <>Unlock station hover</>}
               {!isStopRoute && <>Click a station to lock</>}
               <FontAwesomeIcon
                 className="ml-2"
@@ -439,7 +460,9 @@ function Map() {
         </div>
       </div>
       <div className="absolute bottom-9 left-2 z5 text-white w-2/6 bg-gray-700 p-3 rounded-md w-48">
-        <div className="text-sm md:text-md font-bold mb-2">Accessible Area</div>
+        <div className="text-sm md:text-md font-bold mb-2 text-emerald-500">
+          Accessible Area
+        </div>
         <img
           src={subwayIsochronesLegend}
           alt="legend explaining isochrone travel times"

@@ -1,19 +1,6 @@
 import React, { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { ReactComponent } from "./about.md";
-
-function ExternalLink({ to, children }) {
-  return (
-    <a
-      className="hover:underline text-cyan-500"
-      href={to}
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      {children}
-    </a>
-  );
-}
+import { ReactComponent as About } from "./about.md";
 
 function Modal({ show, setShow }) {
   return (
@@ -53,13 +40,13 @@ function Modal({ show, setShow }) {
                   <div className="sm:flex sm:items-start">
                     <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
                       <Dialog.Title
-                        as="h3"
-                        className="text-base font-semibold leading-6 text-white"
+                        as="h1"
+                        className="text-lg font-semibold leading-6 text-white"
                       >
                         About
                       </Dialog.Title>
-                      <div className="mt-2">
-                        <ReactComponent />
+                      <div className="mt-2 markdown">
+                        <About />
                       </div>
                     </div>
                   </div>
@@ -67,7 +54,7 @@ function Modal({ show, setShow }) {
                 <div className="bg-gray-700 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
                   <button
                     type="button"
-                    className="inline-flex w-full justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500 sm:ml-3 sm:w-auto"
+                    className="inline-flex w-full justify-center rounded-md bg-emerald-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-600 sm:ml-3 sm:w-auto"
                     onClick={() => setShow(false)}
                   >
                     Got it!

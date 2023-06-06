@@ -127,3 +127,23 @@ body,
 .mapboxgl-compact {
   box-sizing: initial;
 }
+
+.markdown p, .markdown ul {
+  @apply text-sm mb-3;
+}
+
+.markdown li {
+  @apply list-disc;
+}
+
+.markdown h2 {
+  @apply font-bold mt-4 mb-3;
+}
+
+.markdown a {
+  @apply text-emerald-500;
+}
+
+.markdown a:hover {
+  @apply text-emerald-600 cursor-pointer underline;
+}
